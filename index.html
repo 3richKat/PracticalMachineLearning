@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Practicalmachinelearning : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Practicalmachinelearning</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/klausEbehr/PracticalMachineLearning">View on GitHub</a>
+
+          <h1 id="project_title">Practicalmachinelearning</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/klausEbehr/PracticalMachineLearning/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/klausEbehr/PracticalMachineLearning/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <hr>
+
+<p>title: "Predicting Exercise Quality with Machine Learning"
+author: "Erich Meschkat"
+date: "Sunday, November 23, 2014"</p>
+
+<h2>
+<a id="output-html_document" class="anchor" href="#output-html_document" aria-hidden="true"><span class="octicon octicon-link"></span></a>output: html_document</h2>
+
+<p>Load in libraries</p>
+
+<pre lang="r,"><code>library(randomForest)
+set.seed(11)
+</code></pre>
+
+<p>Read in train and test data from web.  </p>
+
+<div class="highlight highlight-r"><pre><span class="pl-vo">train.url</span> <span class="pl-k">&lt;-</span> <span class="pl-s1"><span class="pl-pds">"</span>http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv<span class="pl-pds">"</span></span>
+<span class="pl-vo">test.url</span> <span class="pl-k">&lt;-</span> <span class="pl-s1"><span class="pl-pds">"</span>http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv<span class="pl-pds">"</span></span>
+download.file(<span class="pl-vo">train.url</span>, <span class="pl-s1"><span class="pl-pds">"</span>c:/program files/r/pmltrain.csv<span class="pl-pds">"</span></span>)
+download.file(<span class="pl-vo">test.url</span>, <span class="pl-s1"><span class="pl-pds">"</span>c:/program files/r/pmltest.csv<span class="pl-pds">"</span></span>)
+<span class="pl-vo">train</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s1"><span class="pl-pds">"</span>c:/program files/r/pmltrain.csv<span class="pl-pds">"</span></span>)
+<span class="pl-vo">test</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s1"><span class="pl-pds">"</span>c:/program files/r/pmltest.csv<span class="pl-pds">"</span></span>)</pre></div>
+
+<p>Subset data to include only columns that DO NOT have NAs in the test set (leaves 60 factors, but includes some ID categories)  </p>
+
+<div class="highlight highlight-r"><pre><span class="pl-vo">test.index</span> <span class="pl-k">&lt;-</span> colSums(is.na(<span class="pl-vo">test</span>)) <span class="pl-k">==</span> <span class="pl-c1">0</span>
+<span class="pl-vo">test.sub</span> <span class="pl-k">&lt;-</span> <span class="pl-vo">test</span>[which(<span class="pl-vo">test.index</span> <span class="pl-k">==</span> <span class="pl-c1">TRUE</span>)]
+<span class="pl-vo">train.sub</span> <span class="pl-k">&lt;-</span> <span class="pl-vo">train</span>[which(<span class="pl-vo">test.index</span> <span class="pl-k">==</span> <span class="pl-c1">TRUE</span>)]
+</pre></div>
+
+<p>We will use a Random Forest alogrithm to develop a model.  This is a good fit because it does not require scaling our parameters, and can accomodate a large number of features.  Though computationally expensive, we have trimmed our features enough in the previous step to allow this model to run on a normal laptop.  </p>
+
+<div class="highlight highlight-r"><pre><span class="pl-vo">rfmodel</span> <span class="pl-k">&lt;-</span> randomForest(<span class="pl-v">x</span><span class="pl-k">=</span><span class="pl-vo">train.sub</span>[,<span class="pl-c1">8</span><span class="pl-k">:</span><span class="pl-c1">59</span>], <span class="pl-v">y</span><span class="pl-k">=</span><span class="pl-vo">train.sub</span><span class="pl-k">$</span><span class="pl-vo">classe</span> )
+<span class="pl-vo">rfmodel</span></pre></div>
+
+<p>The Random Forest performs extrememly well, with an Out of Sample error rate of less than 1% (0.28%).  Given the nature of the Random Forest Alogrithm, cross validation is included in the error rate.  </p>
+
+<p>Let's predict the classifaction of the test set.  </p>
+
+<div class="highlight highlight-r"><pre><span class="pl-vo">rftest</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-vo">rfmodel</span>, <span class="pl-vo">test.sub</span>[<span class="pl-c1">8</span><span class="pl-k">:</span><span class="pl-c1">59</span>])
+paste(<span class="pl-vo">rftest</span>)</pre></div>
+
+<p>Looks like we predicted all 20 correctly!!</p>
+
+<p>Below is a plot showing the error rate of our model as the number of trees increases.  </p>
+
+<div class="highlight highlight-r"><pre>plot(<span class="pl-vo">rfmodel</span>, <span class="pl-v">type</span><span class="pl-k">=</span><span class="pl-s1"><span class="pl-pds">"</span>l<span class="pl-pds">"</span></span>)</pre></div>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Practicalmachinelearning maintained by <a href="https://github.com/klausEbehr">klausEbehr</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
