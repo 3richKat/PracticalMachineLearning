@@ -1,0 +1,54 @@
+---
+title: "Predicting Exercise Quality with Machine Learning"
+author: "Erich Meschkat"
+date: "Sunday, November 23, 2014"
+output: html_document
+---
+
+
+Load in libraries
+```{r, message=FALSE, warning=FALSE}
+library(randomForest)
+set.seed(11)
+```
+
+Read in train and test data from web.  
+```{r}
+train.url <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+test.url <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+download.file(train.url, "c:/program files/r/pmltrain.csv")
+download.file(test.url, "c:/program files/r/pmltest.csv")
+train <- read.csv("c:/program files/r/pmltrain.csv")
+test <- read.csv("c:/program files/r/pmltest.csv")
+```
+
+
+Subset data to include only columns that DO NOT have NAs in the test set (leaves 60 factors, but includes some ID categories)  
+```{r}
+test.index <- colSums(is.na(test)) == 0
+test.sub <- test[which(test.index == TRUE)]
+train.sub <- train[which(test.index == TRUE)]
+
+```
+
+
+We will use a Random Forest alogrithm to develop a model.  This is a good fit because it does not require scaling our parameters, and can accomodate a large number of features.  Though computationally expensive, we have trimmed our features enough in the previous step to allow this model to run on a normal laptop.  
+```{r}
+rfmodel <- randomForest(x=train.sub[,8:59], y=train.sub$classe )
+rfmodel
+```
+
+The Random Forest performs extrememly well, with an Out of Sample error rate of less than 1% (0.28%).  Given the nature of the Random Forest Alogrithm, cross validation is included in the error rate.  
+
+
+
+Let's predict the classifaction of the test set.  
+```{r}
+rftest <- predict(rfmodel, test.sub[8:59])
+paste(rftest)
+```
+Looks like we predicted all 20 correctly!!
+
+Below is a plot showing the error rate of our model as the number of trees increases.  
+```{r}
+plot(rfmodel, type="l")
